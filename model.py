@@ -1,4 +1,6 @@
 import pandas as pd
+import shap
+import numpy as np
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, confusion_matrix
@@ -58,3 +60,15 @@ def load_model(filename='fraud_model.pkl'):
     model = joblib.load(filename)
     print(f"Model loaded from {filename}")
     return model
+
+# Use SHAP to get feature importances
+explainer = shap.Explainer(model.predict_proba, X_train)
+
+def extract_top_features(single_row_df, top_n=3):
+    # Returns the top N feature contributions for a single transaction in a formatted string to be fed into the agent
+    shap_values = explainer(single_row_df)
+    row_values = shap_values.values[0][:, 1]  # class 1 = fraud
+    row_features = [(single_row_df.columns[i], row_values[i]) for i in range(len(row_values))]
+    row_features.sort(key=lambda x: abs(x[1]), reverse=True)
+    top_feature_contributions = f"Transaction's top features:\n" + "\n".join(f"  - {name}: contribution {value:.4f}" for name, value in row_features[:top_n])
+    return top_feature_contributions
