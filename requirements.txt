@@ -1,0 +1,8 @@
+gradio==5.33.0
+joblib==1.4.2
+modal==1.0.3
+numpy==2.3.0
+pandas==2.3.0
+scikit_learn==1.7.0
+shap==0.47.2
+transformers==4.51.3
