@@ -1,9 +1,9 @@
 import pandas as pd
-import shap
 import numpy as np
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, confusion_matrix
+from lime.lime_tabular import LimeTabularExplainer
 
 # Load data
 data = pd.read_csv('card_transdata.csv')
@@ -61,14 +61,40 @@ def load_model(filename='fraud_model.pkl'):
     print(f"Model loaded from {filename}")
     return model
 
-# Use SHAP to get feature importances
-explainer = shap.Explainer(model.predict_proba, X_train)
+
+
+from lime.lime_tabular import LimeTabularExplainer
+
+# Initialize LIME explainer on training data
+explainer = LimeTabularExplainer(
+    training_data=X_train.values,
+    feature_names=X_train.columns.tolist(),
+    class_names=['not_fraud', 'fraud'],
+    mode='classification'
+)
 
 def extract_top_features(single_row_df, top_n=3):
-    # Returns the top N feature contributions for a single transaction in a formatted string to be fed into the agent
-    shap_values = explainer(single_row_df)
-    row_values = shap_values.values[0][:, 1]  # class 1 = fraud
-    row_features = [(single_row_df.columns[i], row_values[i]) for i in range(len(row_values))]
-    row_features.sort(key=lambda x: abs(x[1]), reverse=True)
-    top_feature_contributions = f"Transaction's top features:\n" + "\n".join(f"  - {name}: contribution {value:.4f}" for name, value in row_features[:top_n])
-    return top_feature_contributions
+    # Generate explanation for the 'fraud' class (label=1)
+    exp = explainer.explain_instance(
+        single_row_df.values[0],
+        lambda arr: model.predict_proba(
+            pd.DataFrame(arr, columns=X_train.columns.tolist())
+        ),
+        num_features=top_n
+    )
+
+    # Get list of (feature, weight) for the fraud prediction
+    feature_weights = exp.as_list(label=1)
+    # Format the top features into a string
+    formatted = "Transaction's top features:\n"
+    formatted += "\n".join(f"  - {feat}: weight {weight:.4f}" for feat, weight in feature_weights)
+    return formatted
+
+
+# Show top contributing features for a few fraud examples
+fraud_examples = X_test[y_test == 1].sample(5, random_state=42)
+for idx, row in fraud_examples.iterrows():
+    df_row = row.to_frame().T
+    features_str = extract_top_features(df_row)
+    print(f"\nTransaction {idx} top features:")
+    print(features_str)
