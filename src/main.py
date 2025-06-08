@@ -1,74 +1,69 @@
 import gradio as gr
-from src.model import load_model, extract_top_features # imports from model.py
-import modal
 import pandas as pd
+import modal
+import torch # to automate inclusion in requirements.txt for transformers
+from src.model import load_model, extract_top_features
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
-# Fraud classifier
-fraud_model = load_model() # Takes a row of data as a dataframe and returns a prediction (0=Normal or 1=Fraud)
-
-
-def is_fradulent(transaction_data):
-    """
-    Predicts if a transaction is fraudulent or not.
-    
-    Args:
-        transaction_data (pd.DataFrame): A single row DataFrame containing transaction features.
-        
-    Returns:
-        str: Prediction result and top feature contributions.
-    """
-    prediction = fraud_model.predict(transaction_data)
-    top_features = extract_top_features(transaction_data, top_n=3)
-    
-    return f"Anomaly Model Prediction: {'Fraud' if prediction[0] == 1 else 'Normal'}\nTop Contributing Features:\n{top_features}"
-
-
+# modal app configuration
 app = modal.App("mcp-hf")
+
+# bake in all requirements + src package
 image = (
     modal.Image.debian_slim()
          .pip_install_from_requirements("requirements.txt")
+         .add_local_python_source("src", copy=True)
 )
 
+# load fraud classifier from src/model.py
+fraud_model = None
+def get_fraud_model():
+    global fraud_model
+    if fraud_model is None:
+        fraud_model = load_model()
+    return fraud_model
+
+
+# initialize the LLM and tokenizer
+# using the model from Hugging Face
+llm = None
+tokenizer = None
+MODEL_NAME = "TheFinAI/Fin-o1-8B"
+
+# runs the LLM reasoning on Modal Labs GPU
 @app.function(gpu="T4", image=image)
-def llm_reason(data=""):
-    from transformers import AutoModelForCausalLM, AutoTokenizer
+def llm_reason(context: str) -> str:
+    global llm, tokenizer
+    if llm is None:
+        tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+        llm = AutoModelForCausalLM.from_pretrained(MODEL_NAME)
+    inputs = tokenizer(context, return_tensors="pt")
+    outputs = llm.generate(**inputs, max_new_tokens=200)
+    return tokenizer.decode(outputs[0], skip_special_tokens=True)
 
-    model_name = "TheFinAI/Fin-o1-8B"
+# wrapper to build context and call the LLM
+def build_and_call_llm(transaction_df: pd.DataFrame) -> str:
+    # 1) get a fraud prediction + top features 
+    model = get_fraud_model()
+    pred = model.predict(transaction_df)[0]
+    feat_str = extract_top_features(transaction_df, top_n=3)
 
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForCausalLM.from_pretrained(model_name)
+    # 2) assemble a minimal prompt temporarily
+    status = "FRAUD" if pred == 1 else "NORMAL"
+    prompt = (
+        f"Transaction classified as **{status}**.\n"
+        f"Top contributing factors according the LIME module:\n{feat_str}\n\n"
+        "Please explain why and recommend next investigative steps."
+    )
 
-    input_text = f"Analyze the following transaction data:\n{data}\n\
-        Explain the following classification results produced by the LIME python module: \n\
-        {is_fradulent(data)}"\
-    
-
-    inputs = tokenizer(input_text, return_tensors="pt")
-    output = model.generate(**inputs, max_new_tokens=200)
-    print(tokenizer.decode(output[0], skip_special_tokens=True))
+    # 3) call remote LLM
+    return llm_reason.remote(prompt)
 
 
-# def ai_agent_interface(data):
-#     # Replace this with your AI agent logic
-#     response = f"AI Agent received: {data}"
-#     return response
-
-# iface = gr.Interface(
-#     fn=ai_agent_interface,
-#     inputs=gr.Textbox(lines=2, placeholder="Enter your message here..."),
-#     outputs=gr.Textbox(),
-#     title="AI Agent Interface",
-#     description="Interact with the AI agent using this Gradio app."
-# )
-
-##TEMPORARY EXAMPLE UNTIL UI IS INTERACTIVE:
-df = pd.read_csv('card_transdata.csv').drop(columns=['fraud'])
-example_transaction = df.iloc[0:1] # example row of data to test the system
-
+# ─── ENTRYPOINT ───────────────────────────────────────────────────────────────—
 @app.local_entrypoint()
 def main():
-    print("Starting the LLM reasoning process...")
-    llm_reason.remote(example_transaction)
-
-# if __name__ == "__main__":
-#     iface.launch(share=True)
+    # load a sample, build context, and await the LLM’s explanation
+    df = pd.read_csv('src/card_transdata.csv').drop(columns=['fraud']).iloc[0:1]
+    explanation = build_and_call_llm(df)
+    print("LLM Explanation:\n", explanation)
