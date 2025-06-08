@@ -1,9 +1,9 @@
+from llama_cpp import Llama
 import gradio as gr
 import pandas as pd
 import modal
 import torch # to automate inclusion in requirements.txt for transformers
-from src.model import load_model, extract_top_features
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from model import load_model, extract_top_features
 
 # modal app configuration
 app = modal.App("mcp-hf")
@@ -27,19 +27,30 @@ def get_fraud_model():
 # initialize the LLM and tokenizer
 # using the model from Hugging Face
 llm = None
-tokenizer = None
-MODEL_NAME = "TheFinAI/Fin-o1-8B"
 
 # runs the LLM reasoning on Modal Labs GPU
-@app.function(gpu="T4", image=image)
-def llm_reason(context: str) -> str:
+#@app.function(gpu="T4", image=image)
+def llm_reason(prompt: str) -> str:
     global llm, tokenizer
     if llm is None:
-        tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-        llm = AutoModelForCausalLM.from_pretrained(MODEL_NAME)
-    inputs = tokenizer(context, return_tensors="pt")
-    outputs = llm.generate(**inputs, max_new_tokens=200)
-    return tokenizer.decode(outputs[0], skip_special_tokens=True)
+        llm = Llama.from_pretrained(
+            repo_id="lmstudio-community/Nemotron-Research-Reasoning-Qwen-1.5B-GGUF",
+            filename="Nemotron-Research-Reasoning-Qwen-1.5B-Q4_K_M.gguf",
+            verbose=False,
+            n_ctx=131072,  # Match training context length
+            n_gpu_layers=-1  # Use all GPU layers
+        )
+
+    output = llm.create_chat_completion(
+    	messages = [
+    		{
+    			"role": "user",
+    			"content": prompt
+    		}
+    	]
+    )
+
+    return output["choices"][0]["message"]["content"]
 
 # wrapper to build context and call the LLM
 def build_and_call_llm(transaction_df: pd.DataFrame) -> str:
@@ -57,13 +68,15 @@ def build_and_call_llm(transaction_df: pd.DataFrame) -> str:
     )
 
     # 3) call remote LLM
-    return llm_reason.remote(prompt)
+    return llm_reason(prompt) # llm_reason.remote(prompt)
 
 
 # ─── ENTRYPOINT ───────────────────────────────────────────────────────────────—
-@app.local_entrypoint()
+#@app.local_entrypoint()
 def main():
     # load a sample, build context, and await the LLM’s explanation
     df = pd.read_csv('src/card_transdata.csv').drop(columns=['fraud']).iloc[0:1]
     explanation = build_and_call_llm(df)
-    print("LLM Explanation:\n", explanation)
+    print("Explanation:\n", explanation)
+
+main()
