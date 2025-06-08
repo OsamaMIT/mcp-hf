@@ -1,5 +1,5 @@
 import gradio as gr
-from model import load_model, extract_top_features # imports from model.py
+from src.model import load_model, extract_top_features # imports from model.py
 import modal
 import pandas as pd
 
