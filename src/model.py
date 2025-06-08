@@ -5,7 +5,7 @@ from sklearn.metrics import classification_report, confusion_matrix
 from lime.lime_tabular import LimeTabularExplainer
 
 # Load data
-data = pd.read_csv('card_transdata.csv')
+data = pd.read_csv('src/card_transdata.csv')
 
 # Features and target
 X = data.drop(columns=['fraud'])
