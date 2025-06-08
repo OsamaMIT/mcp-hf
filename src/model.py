@@ -2,6 +2,7 @@ import pandas as pd
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, confusion_matrix
+import joblib
 from lime.lime_tabular import LimeTabularExplainer
 
 # Load data
@@ -35,34 +36,31 @@ model.fit(X_train, y_train)
 # Predict on the test set
 y_pred = model.predict(X_test)
 
-print("\nTesting with all transactions...")
+"""Comment out the following lines to skip evaluation in prod"""
+# print("\nTesting with all transactions...")
 
-# Evaluate
-print("Classification Report:")
-print(classification_report(y_test, y_pred, digits=4))
+# # Evaluate
+# print("Classification Report:")
+# print(classification_report(y_test, y_pred, digits=4))
 
-print("\nConfusion Matrix:")
-print(confusion_matrix(y_test, y_pred))
+# print("\nConfusion Matrix:")
+# print(confusion_matrix(y_test, y_pred))
 
 
 # # Save and load the model using joblib
-import joblib
 def save_model(model, filename='fraud_model.pkl'):
     """Saves the trained model to a file."""
     joblib.dump(model, filename)
-    print(f"Model saved to {filename}")
+    #print(f"Model saved to {filename}")
 
 save_model(model)
 
 def load_model(filename='fraud_model.pkl'):
     """Loads the saved model from a file."""
     model = joblib.load(filename)
-    print(f"Model loaded from {filename}")
+    #print(f"Model loaded from {filename}")
     return model
 
-
-
-from lime.lime_tabular import LimeTabularExplainer
 
 # Initialize LIME explainer on training data
 explainer = LimeTabularExplainer(
@@ -88,12 +86,3 @@ def extract_top_features(single_row_df, top_n=3):
     formatted = "Transaction's top features:\n"
     formatted += "\n".join(f"  - {feat}: weight {weight:.4f}" for feat, weight in feature_weights)
     return formatted
-
-
-# Show top contributing features for a few fraud examples
-fraud_examples = X_test[y_test == 1].sample(5, random_state=42)
-for idx, row in fraud_examples.iterrows():
-    df_row = row.to_frame().T
-    features_str = extract_top_features(df_row)
-    print(f"\nTransaction {idx} top features:")
-    print(features_str)
