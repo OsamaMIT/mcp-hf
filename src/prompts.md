@@ -2,10 +2,11 @@
 
 
 ### Placeholder Prompt
+```
 f"Transaction classified as **{status}**.\n"
 f"Top contributing factors according the LIME module:\n{feat_str}\n\n"
 "Please explain why and recommend next investigative steps."
-
+```
 
 ### Prompt V1
 ```
