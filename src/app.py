@@ -3,6 +3,12 @@ from reason import assess_fraud
 
 def detect_fraud(transaction_amount, median_spend, dist_home, dist_last, repeat, chip, pin, online):
     try:
+        # Convert booleans to integers
+        repeat = int(bool(repeat))
+        chip = int(bool(chip))
+        pin = int(bool(pin))
+        online = int(bool(online))
+
         # Validate inputs
         required_inputs = [transaction_amount, median_spend, dist_home, dist_last]
         if any(val is None for val in required_inputs):
@@ -17,28 +23,23 @@ def detect_fraud(transaction_amount, median_spend, dist_home, dist_last, repeat,
         # If all good, proceed
         print("Got values:", transaction_amount, median_spend, dist_home, dist_last, repeat, chip, pin, online)
         return f"Input accepted.\nAmount: {transaction_amount}, Median: {median_spend}, etc."
+
     
     except Exception as e:
         return f"An error occurred: {str(e)}"
 
 
 css = """
-:root {
-    --primary-color: rgba(0, 0, 0, 1);
-    --secondary-color: rgba(255, 255, 255);
-    --tertiary-color: rgba(0, 0, 0, 0.5);
-}
-
 .app-title {
+    margin: 1rem auto;
     text-align: center;
-    margin-bottom: 1rem;
 }
 
 .outer-container {
-    gap: 2.5rem;
+    gap: 3rem;
 }
 
-.main-col-one {
+.main-col-one, .main-col-two {
     gap: 3rem;
 }
 
@@ -54,122 +55,61 @@ css = """
 
 .input-elem-desc p {
     font-size: 0.9rem;
-    color: var(--tertiary-color);
+    opacity: 0.6;
 }
 
 .input-elem-col-one {
     gap: 0;
 }
 
-.custom-input-elem-one {
-    border: none !important;
-    padding: 0 !important;
-    box-shadow: none !important;
-    background: transparent !important;
-}
-
 .custom-input-elem-one span {
     display: none;
 }
 
-.custom-input-elem-two input[type=number],
-.custom-input-elem-two button,
-.custom-input-elem-two .wrap label {
-    display: none !important;
-}
-
-.custom-input-elem-one input[type=number] {
-    border: 1px solid #000 !important;
-    border-bottom-width: 3px !important;
+.custom-input-elem-one input {
     border-radius: 6px !important;
 }
 
-.custom-input-elem-one input[type=number]:focus {
-    outline: none !important;
-    box-shadow: none !important;
-    border-color: var(--primary-color) !important;
-}
-
-.custom-input-elem-two {
-    all: unset;
-    display: flex;
-    flex-direction: column;
-    background-color: white;
-}
-
-.custom-input-elem-two .head[class*="svelte-"] {
-    display: none !important;
-}
-
-.form[class*="svelte-"] {
-    border: none !important;
-    box-shadow: none !important;
-    background: transparent !important;
-}
-
-.custom-input-elem-two .wrap {
-    border: none !important;
-}
-
-.custom-input-elem-two input[type=range] {
-    appearance: none !important;
-    display: block;
-    width: 100% !important;
-    max-width: none;
-    height: 1.75rem !important;
-    background: var(--secondary-color) !important;
-    border-radius: 1.75rem !important;
-    border: 1px solid var(--primary-color) !important;
-    padding: 0.25rem 0.15rem 0.3rem !important;
-    cursor: pointer !important;
-    transition: background 0.3s ease-in-out;
-}
-
-.custom-input-elem-two input[type=range]::-webkit-slider-runnable-track {
-    width: 3.25rem !important;
-    background: transparent !important;    
-    border: none !important;
-    margin: 0 !important;
-}
-
-.custom-input-elem-two input[type=range]::-moz-range-track {
-    background: transparent !important;
-    border: none !important;
-}
-
-.custom-input-elem-two input[type=range]::-webkit-slider-thumb {
+.custom-input-elem-one input::-webkit-outer-spin-button,
+.custom-input-elem-one input::-webkit-inner-spin-button {
     -webkit-appearance: none;
-    width: 1.25rem;
-    height: 1.25rem;
-    background: var(--primary-color);
-    border-radius: 50%;
-    transition: transform 0.3s ease;    
-    z-index: 10;
+    margin: 0;
 }
 
-.custom-input-elem-two input[type=range]::-moz-range-thumb {
-    width: 1.25rem;
-    height: 1.25rem;
-    background: var(--primary-color);
-    border-radius: 50%;
+.custom-input-elem-one input[type=number] {
+    -moz-appearance: textfield;
+}
+
+div:has(.custom-input-elem-one), div:has(.custom-input-two), .custom-input-elem-one, .custom-input-two {
+    padding: 0;
+    margin: 0;
     border: none;
-    transition: transform 0.3s ease;
-    z-index: 10;
+    background: none;
 }
 
-.custom-input-elem-two .slider_input_container span {
-    display: none;
+.custom-input-two {
+    display: flex;
+    justify-content: center;
+}
+
+.custom-input-two input[type=checkbox] {
+    height: 1.5rem;
+    width: 1.5rem;
+    border-width: 2px;
+}
+
+.button-row {
+    margin: 3rem auto;
 }
 
 .fraud-button {
-    background-color: var(--primary-color);
-    color: var(--secondary-color);
     font-weight: 700;
     border: none;
     padding: 0.5rem 1rem;
     border-radius: 10px;
     font-size: 1.15rem;
-    max-width: 60%;
+    width: 100%;
+    max-width: 500px;
     display: block;
     margin: 0 auto;
     transition: 0.3s ease;
@@ -178,113 +118,106 @@ css = """
 .fraud-button:hover,
 .fraud-button:focus {
     outline: none;
-    background-color: var(--secondary-color);
-    color: var(--primary-color);
     box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
-}
-
-.input-elem-row > .gr-box {
-    flex: 1;
-    min-width: 0;
-}
-
-.custom-input-elem-two {
-    width: 100%;
-    max-width: 3.25rem;
 }
 
 @media screen and (max-width: 600px) {
     .fraud-button {
         width: 100%;
+        max-width: 100%;
+    }
+
+    .custom-input-two {
+        justify-content: flex-start !important;
     }
 }
 
 .output-box textarea {
     font-size: 1rem;
-    color: black;
 }
 
 """
 
 
 with gr.Blocks(theme=gr.themes.Base(font=[gr.themes.GoogleFont("Rubik"), "Arial", "sans-serif"]), css=css) as demo:
-    gr.Markdown("# AI-Powered Credit Card Fraud Detection", elem_classes="app-title")
+    gr.Markdown("# AI-Powered Fraud Detection for Merchants & Analysts", elem_classes="app-title")
     with gr.Row(elem_classes="outer-container"):
         with gr.Column(elem_classes="main-col-one"):
-            with gr.Row(elem_classes="input-elem-row"):
-                with gr.Column(elem_classes="input-elem-col-one"):
-                    gr.Markdown("Distance From Home (km)", elem_classes="input-elem-header")
-                    gr.Markdown("How far the customer was from their registered address when the transaction occurred.", elem_classes="input-elem-desc")
-                with gr.Column():
-                    distanceFromHome = gr.Number(elem_classes="custom-input-elem-one")
-
-            with gr.Row(elem_classes="input-elem-row"):
-                with gr.Column(elem_classes="input-elem-col-one"):
-                    gr.Markdown("Distance From Last Transaction (km)", elem_classes="input-elem-header")
-                    gr.Markdown("Distance between this transaction and the customer's previous one, in kilometers. Helps detect impossible travel.", elem_classes="input-elem-desc")
-                with gr.Column():
-                    distanceFromLastTransaction = gr.Number(elem_classes="custom-input-elem-one") 
-
             with gr.Row(elem_classes="input-elem-row"):
                 with gr.Column(elem_classes="input-elem-col-one"):
                     gr.Markdown("Transaction Amount ($)", elem_classes="input-elem-header")
                     gr.Markdown("The total amount of the transaction in US dollars", elem_classes="input-elem-desc")
                 with gr.Column():
-                    transactionAmount = gr.Number(elem_classes="custom-input-elem-one")
+                    transactionAmount = gr.Number(value=None, elem_classes="custom-input-elem-one")
 
             with gr.Row(elem_classes="input-elem-row"):
                 with gr.Column(elem_classes="input-elem-col-one"):
                     gr.Markdown("Customer Median Spend ($)", elem_classes="input-elem-header")
                     gr.Markdown("This customer’s typical (median) purchase amount. Used to detect unusual spending.", elem_classes="input-elem-desc")
                 with gr.Column():
-                    customerMedianSpend = gr.Number(elem_classes="custom-input-elem-one")
+                    customerMedianSpend = gr.Number(value=None, elem_classes="custom-input-elem-one")
 
+            with gr.Row(elem_classes="input-elem-row"):
+                with gr.Column(elem_classes="input-elem-col-one"):
+                    gr.Markdown("Distance From Home (km)", elem_classes="input-elem-header")
+                    gr.Markdown("How far the customer was from their registered address when the transaction occurred.", elem_classes="input-elem-desc")
+                with gr.Column():
+                    distanceFromHome = gr.Number(value=None, elem_classes="custom-input-elem-one")
+
+            with gr.Row(elem_classes="input-elem-row"):
+                with gr.Column(elem_classes="input-elem-col-one"):
+                    gr.Markdown("Distance From Last Transaction (km)", elem_classes="input-elem-header")
+                    gr.Markdown("Distance between this transaction and the customer's previous one, in kilometers. Helps detect impossible travel.", elem_classes="input-elem-desc")
+                with gr.Column():
+                    distanceFromLastTransaction = gr.Number(value=None, elem_classes="custom-input-elem-one") 
+                
+
+        with gr.Column(elem_classes="main-col-two"):
             with gr.Row(elem_classes="input-elem-row"):
                 with gr.Column(elem_classes="input-elem-col-one"):
                     gr.Markdown("Repeat Retailer", elem_classes="input-elem-header")
                     gr.Markdown("Has the customer made purchases from this merchant before?", elem_classes="input-elem-desc")
                 with gr.Column():
-                    repeatRetailer = gr.Slider(minimum=0, maximum=1, value=0, step=1, elem_classes="custom-input-elem-two") 
+                    repeatRetailer = gr.Checkbox(label="", elem_classes="custom-input-two") 
 
             with gr.Row(elem_classes="input-elem-row"):
                 with gr.Column(elem_classes="input-elem-col-one"):
                     gr.Markdown("Used Chip", elem_classes="input-elem-header")
                     gr.Markdown("Was the transaction done using the credit card's chip (EMV) instead of swipe or manual entry?", elem_classes="input-elem-desc")
                 with gr.Column():
-                    usedChip = gr.Slider(minimum=0, maximum=1, value=0, step=1, elem_classes="custom-input-elem-two")
+                    usedChip = gr.Checkbox(label="", elem_classes="custom-input-two")
 
             with gr.Row(elem_classes="input-elem-row"):
                 with gr.Column(elem_classes="input-elem-col-one"):
                     gr.Markdown("Used PIN", elem_classes="input-elem-header")
                     gr.Markdown("Was a PIN number entered during the transaction?", elem_classes="input-elem-desc")
                 with gr.Column():
-                    usedPin = gr.Slider(minimum=0, maximum=1, value=0, step=1, elem_classes="custom-input-elem-two")
+                    usedPin = gr.Checkbox(label="", elem_classes="custom-input-two")
 
             with gr.Row(elem_classes="input-elem-row"):
                 with gr.Column(elem_classes="input-elem-col-one"):
                     gr.Markdown("Online Order", elem_classes="input-elem-header")
                     gr.Markdown("Was this transaction placed through an online store (e.g. e-commerce, app)?", elem_classes="input-elem-desc")
                 with gr.Column():
-                    onlineOrder = gr.Slider(minimum=0, maximum=1, value=0, step=1, elem_classes="custom-input-elem-two")      
+                    onlineOrder = gr.Checkbox(label="", elem_classes="custom-input-two") 
 
-            with gr.Row(elem_classes="input-elem-row"):
+    with gr.Row(elem_classes="button-row"):
                 checkFraud = gr.Button("Check for Fraud", elem_classes="fraud-button")
-                
-
-        with gr.Column():
-            output_box = gr.Textbox(label="Output", lines=3, elem_classes="output-box")
+    
+    with gr.Row():
+        output_box = gr.Textbox(label="Output", lines=3, elem_classes="output-box")
 
         checkFraud.click(
-                    fn=assess_fraud,
+                    fn=detect_fraud,
                     inputs=[
+                        transactionAmount,
+                        customerMedianSpend,
                         distanceFromHome,
                         distanceFromLastTransaction,
-                        transactionAmount,
-                        customerMedianSpend, # Ratio of purchased price transaction to median purchase price.
                         repeatRetailer,
                         usedChip,
                         usedPin,
-                        onlineOrder,
+                        onlineOrder
                     ],
                     outputs=output_box
         )
