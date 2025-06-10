@@ -1,13 +1,13 @@
-# 🕵️ AI-Powered Fraud Detection Agent
+# AI-Powered Fraud Detection Agent
 
-**Tag:** `agent-demo-track`
+`agent-demo-track`
 **Track:** 3. Agentic Demo Showcase  
 **Built For:** [Hugging Face Hackathon - Multimodal Challenge Playground (MCP)](https://huggingface.co/multimodal-challenge)  
 **Team:** Muhammed Hisham, Osama Elmahdy
 
 ---
 
-## 🌐 Overview
+## Overview
 
 This Gradio-based AI Agent helps **merchants, analysts, and fraud teams** assess transaction legitimacy by combining a **fraud detection model** with **reasoning capabilities** powered by Hugging Face’s [`Nemotron-Research-Reasoning-Qwen-1.5B-GGUF`](https://huggingface.co/Nemotron-Research/Reasoning-Qwen-1_5B-GGUF) model.
 
@@ -17,13 +17,13 @@ Users input transaction details, and the system:
 
 ---
 
-## 🧠 AI Stack
+## AI Stack
 
-### 💡 Core Idea
+### Core Idea
 
 > First, check if a transaction is likely fraudulent using a traditional ML model trained on real-world features. Then, invoke an open LLM agent (via GGUF + llama-cpp) to explain and suggest human-friendly actions.
 
-### 🧰 Components Used
+### Components Used
 
 - **Fraud Detection:**  
   - Custom-trained classifier (scikit-learn + LIME explanations)
@@ -34,7 +34,7 @@ Users input transaction details, and the system:
 
 ---
 
-## 📽️ Demo Video
+## Demo Video
 
 Watch a quick overview and demo of the application here:  
 👉 [Click to Watch on YouTube](https://www.youtube.com)
