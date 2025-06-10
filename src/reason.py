@@ -59,11 +59,11 @@ def assess_fraud(distanceFromHome, distanceFromLastTransaction, transactionAmoun
     data = {
             "distance_from_home": distanceFromHome,
             "distance_from_last_transaction": distanceFromLastTransaction,
-            "ratio_to_median_purchase_price": transactionAmount / customerMedianSpend, # Ratio of purchased price transaction to median purchase price.
-            "repeat_retailer": repeatRetailer,
-            "used_chip": usedChip,
-            "used_pin_number": usedPin,
-            "online_order": onlineOrder,
+            "ratio_to_median_purchase_price": transactionAmount / customerMedianSpend, # Ratio of purchased price transaction to median purchase price
+            "repeat_retailer": float(repeatRetailer), # These variables are boolean and must be converted to float to match the training dataset
+            "used_chip": float(usedChip),
+            "used_pin_number": float(usedPin),
+            "online_order": float(onlineOrder),
     }
     df_row = pd.DataFrame([data])
 
