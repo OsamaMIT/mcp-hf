@@ -30,7 +30,7 @@ Users input transaction details, and the system:
 - **Reasoning & Recommendations:**  
   - Hugging Face’s `Nemotron-Research-Reasoning-Qwen-1.5B-GGUF` running locally via `llama-cpp-python`
 - **UI:**  
-  - Gradio frontend (v5.33.0)
+  - Gradio 
 
 ---
 
