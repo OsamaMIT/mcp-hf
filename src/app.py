@@ -1,4 +1,5 @@
 import gradio as gr
+from reason import assess_fraud
 
 def detect_fraud(transaction_amount, median_spend, dist_home, dist_last, repeat, chip, pin, online):
     try:
@@ -207,23 +208,9 @@ css = """
 
 
 with gr.Blocks(theme=gr.themes.Base(font=[gr.themes.GoogleFont("Rubik"), "Arial", "sans-serif"]), css=css) as demo:
-    gr.Markdown("# AI-Powered Fraud Detection for Merchants & Analysts", elem_classes="app-title")
+    gr.Markdown("# AI-Powered Credit Card Fraud Detection", elem_classes="app-title")
     with gr.Row(elem_classes="outer-container"):
         with gr.Column(elem_classes="main-col-one"):
-            with gr.Row(elem_classes="input-elem-row"):
-                with gr.Column(elem_classes="input-elem-col-one"):
-                    gr.Markdown("Transaction Amount ($)", elem_classes="input-elem-header")
-                    gr.Markdown("The total amount of the transaction in US dollars", elem_classes="input-elem-desc")
-                with gr.Column():
-                    transactionAmount = gr.Number(elem_classes="custom-input-elem-one")
-
-            with gr.Row(elem_classes="input-elem-row"):
-                with gr.Column(elem_classes="input-elem-col-one"):
-                    gr.Markdown("Customer Median Spend ($)", elem_classes="input-elem-header")
-                    gr.Markdown("This customer’s typical (median) purchase amount. Used to detect unusual spending.", elem_classes="input-elem-desc")
-                with gr.Column():
-                    customerMedianSpend = gr.Number(elem_classes="custom-input-elem-one")
-
             with gr.Row(elem_classes="input-elem-row"):
                 with gr.Column(elem_classes="input-elem-col-one"):
                     gr.Markdown("Distance From Home (km)", elem_classes="input-elem-header")
@@ -237,6 +224,20 @@ with gr.Blocks(theme=gr.themes.Base(font=[gr.themes.GoogleFont("Rubik"), "Arial"
                     gr.Markdown("Distance between this transaction and the customer's previous one, in kilometers. Helps detect impossible travel.", elem_classes="input-elem-desc")
                 with gr.Column():
                     distanceFromLastTransaction = gr.Number(elem_classes="custom-input-elem-one") 
+
+            with gr.Row(elem_classes="input-elem-row"):
+                with gr.Column(elem_classes="input-elem-col-one"):
+                    gr.Markdown("Transaction Amount ($)", elem_classes="input-elem-header")
+                    gr.Markdown("The total amount of the transaction in US dollars", elem_classes="input-elem-desc")
+                with gr.Column():
+                    transactionAmount = gr.Number(elem_classes="custom-input-elem-one")
+
+            with gr.Row(elem_classes="input-elem-row"):
+                with gr.Column(elem_classes="input-elem-col-one"):
+                    gr.Markdown("Customer Median Spend ($)", elem_classes="input-elem-header")
+                    gr.Markdown("This customer’s typical (median) purchase amount. Used to detect unusual spending.", elem_classes="input-elem-desc")
+                with gr.Column():
+                    customerMedianSpend = gr.Number(elem_classes="custom-input-elem-one")
 
             with gr.Row(elem_classes="input-elem-row"):
                 with gr.Column(elem_classes="input-elem-col-one"):
@@ -274,16 +275,16 @@ with gr.Blocks(theme=gr.themes.Base(font=[gr.themes.GoogleFont("Rubik"), "Arial"
             output_box = gr.Textbox(label="Output", lines=3, elem_classes="output-box")
 
         checkFraud.click(
-                    fn=detect_fraud,
+                    fn=assess_fraud,
                     inputs=[
-                        transactionAmount,
-                        customerMedianSpend,
                         distanceFromHome,
                         distanceFromLastTransaction,
+                        transactionAmount,
+                        customerMedianSpend, # Ratio of purchased price transaction to median purchase price.
                         repeatRetailer,
                         usedChip,
                         usedPin,
-                        onlineOrder
+                        onlineOrder,
                     ],
                     outputs=output_box
         )
