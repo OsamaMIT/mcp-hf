@@ -39,14 +39,34 @@ def build_and_call_llm(transaction_df: pd.DataFrame) -> str:
     # 1) get a fraud prediction + top features 
     model = get_fraud_model()
     pred = model.predict(transaction_df)[0]
-    feat_str = extract_top_features(transaction_df, top_n=3)
+    feature_contributions = extract_top_features(transaction_df, top_n=3)
 
     # 2) assemble a minimal prompt temporarily
     status = "FRAUD" if pred == 1 else "NORMAL"
     prompt = (
-        f"Transaction classified as **{status}**.\n"
-        f"Top contributing factors according the LIME module:\n{feat_str}\n\n"
-        "Please explain why and recommend next investigative steps."
+        "You are a professional fraud analyst assisting in reviewing a flagged transaction.\n"
+        f"The transaction is classified as **{status}**.\n"
+        f"The top contributing factors and their weights:\n{feature_contributions}\n\n"
+        "Think step-by-step through the features and their weights to understand the classifier's reasoning.\n"
+        "Then:\n"
+        "Explain why this transaction was flagged by each conrtributing factor, explaining why and how the feature contributes to the classification.\n" 
+        "Assess the likelihood of fraud based on the features and their influence, including why their influence is drastic in terms of cause and effect.\n"
+        "Recommend the specific and impactful next investigative steps that a business user or fraud team should take (with ample detail) in real life, independent of the features.\n"
+        "Respond in a formal and explainatory tone (don't be too concise). Your explanation should be understandable to both technical and non-technical users.\n"
+        "        Format your response using **Markdown** as follows:\n"
+        "\n"
+        "        **Prediction**: FRAUD  \n"
+        "        **Likelihood of Fraud**: (Low / Moderate / High)  \n"
+        "\n"
+        "        **Reasoning**:  \n"
+        "        - Bullet point 1  \n"
+        "        - Bullet point 2  \n"
+        "        - Bullet point 3  \n"
+        "\n"
+        "        **Recommended Next Steps**:  \n"
+        "        - Step 1  \n"
+        "        - Step 2  \n"
+        "        - Step 3\n"
     )
 
     return llm_reason(prompt)
