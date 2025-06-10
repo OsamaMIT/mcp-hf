@@ -1,34 +1,6 @@
 import gradio as gr
 from reason import assess_fraud
 
-def detect_fraud(transaction_amount, median_spend, dist_home, dist_last, repeat, chip, pin, online):
-    try:
-        # Convert booleans to integers
-        repeat = int(bool(repeat))
-        chip = int(bool(chip))
-        pin = int(bool(pin))
-        online = int(bool(online))
-
-        # Validate inputs
-        required_inputs = [transaction_amount, median_spend, dist_home, dist_last]
-        if any(val is None for val in required_inputs):
-            return "Please fill in all numeric fields before submitting."
-
-        if any(val < 0 for val in required_inputs):
-            return "Negative values are not allowed for distances or amounts."
-
-        if not (0 <= repeat <= 1) or not (0 <= chip <= 1) or not (0 <= pin <= 1) or not (0 <= online <= 1):
-            return "One of the binary fields is outside the expected range (0-1)."
-
-        # If all good, proceed
-        print("Got values:", transaction_amount, median_spend, dist_home, dist_last, repeat, chip, pin, online)
-        return f"Input accepted.\nAmount: {transaction_amount}, Median: {median_spend}, etc."
-
-    
-    except Exception as e:
-        return f"An error occurred: {str(e)}"
-
-
 css = """
 .app-title {
     margin: 1rem auto;
@@ -206,9 +178,8 @@ with gr.Blocks(theme=gr.themes.Base(font=[gr.themes.GoogleFont("Rubik"), "Arial"
     
     with gr.Row():
         output_box = gr.Textbox(label="Output", lines=3, elem_classes="output-box")
-
         checkFraud.click(
-                    fn=detect_fraud,
+                    fn=assess_fraud,
                     inputs=[
                         transactionAmount,
                         customerMedianSpend,
